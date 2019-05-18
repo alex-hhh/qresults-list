@@ -1,5 +1,7 @@
 # qresults-list - enhanced list-box% control
 
+[![Build Status](https://dev.azure.com/alexharsanyi0641/racket-packages/_apis/build/status/alex-hhh.qresults-list?branchName=master)](https://dev.azure.com/alexharsanyi0641/racket-packages/_build/latest?definitionId=6&branchName=master)
+
 This package provides the `qresults-list%` class which improves the build-in
 Racket `list-box%` control:
 
