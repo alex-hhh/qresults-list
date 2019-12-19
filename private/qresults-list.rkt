@@ -371,7 +371,7 @@
        [choices '()]
        [callback lb-callback]
        [style '(multiple
-                single
+                ;single
                 variable-columns
                 clickable-headers
                 column-headers
@@ -498,6 +498,13 @@
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f (car selected-items))))
 
+    ;; Return the indexs of selected rows, or #f is no row is
+    ;; selected.
+    (define/public (get-selected-row-indexes)
+      ;(displayln "in get-selected-row-indexes")
+      (let ((selected-items (send the-list-box get-selections)))
+        (if (null? selected-items) #f selected-items)))
+    
     ;; Return the data corresponding to ROW-INDEX.  This is equivalent to
     ;; (list-ref the-data (get-selected-row-index)), but possibly more
     ;; efficient.
