@@ -229,6 +229,11 @@
     (init-field pref-tag)
     (init parent
           [label ""]
+          [style-list '(single
+                variable-columns
+                clickable-headers
+                column-headers
+                reorderable-headers)]
           ;; A popup-menu% to be popped up when the user right-clicks on a
           ;; row.
           [right-click-menu #f])
@@ -370,12 +375,7 @@
        [parent the-pane]
        [choices '()]
        [callback lb-callback]
-       [style '(multiple
-                ;single
-                variable-columns
-                clickable-headers
-                column-headers
-                reorderable-headers)]
+       [style style-list]
        [columns '("")]))
 
     ;; Set a default file name to be used by `on-interactive-export-data` --
