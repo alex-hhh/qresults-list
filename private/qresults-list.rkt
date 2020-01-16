@@ -272,7 +272,7 @@
                  (data (in-list the-data)))
              (lb-fill-row the-list-box row-num formatters data))))))
 
-    (define (refresh-contents-1 row-num data)
+    (define (refresh-contents-1 row-num data) ;Looks like the point of this is to refresh only one row rather than the whole table as refresh-contents does.
       (let ((formatters (get-column-formatters)))
         (lb-fill-row the-list-box row-num formatters data)))
 
@@ -538,6 +538,29 @@
         (send the-list-box set-selection row-index)
         (send the-list-box set-first-visible-item row-index)))
 
+;This function is from StackOverflow
+;https://stackoverflow.com/questions/16630702/what-racket-function-can-i-use-to-insert-a-value-into-an-arbitrary-position-with 
+(define (insert-at lst pos x)
+  (define-values (before after) (split-at lst pos))
+  (append before (cons x after)))
+
+
+    ;;Add a new row at a given row index
+    (define/public (add-row-at new-data row-index)
+      ;Build a new set of rows
+      (displayln the-data)
+      (set! the-data
+            ;(append the-data (list new-data))
+            (insert-at the-data row-index new-data)
+            )
+      (displayln the-data)
+      ;
+      ;(lb-clear the-list-box)
+      ;(send/apply the-list-box set the-data)
+      (refresh-contents)
+      )
+
+
     ;; Delete the row at ROW-INDEX.
     (define/public (delete-row row-index)
       (set! the-data
@@ -563,7 +586,5 @@
     ;; Can be overriden if the user wants to be notified when an item is
     ;; selected
     (define/public (on-select row-index row-data)
-      #f)
-
-    ))
+      #f)))
 
