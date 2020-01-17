@@ -548,15 +548,11 @@
     ;;Add a new row at a given row index
     (define/public (add-row-at new-data row-index)
       ;Build a new set of rows
-      (displayln the-data)
+      ;(displayln the-data)
       (set! the-data
-            ;(append the-data (list new-data))
             (insert-at the-data row-index new-data)
             )
-      (displayln the-data)
-      ;
-      ;(lb-clear the-list-box)
-      ;(send/apply the-list-box set the-data)
+      ;(displayln the-data)
       (refresh-contents)
       )
 
