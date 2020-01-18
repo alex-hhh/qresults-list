@@ -3,7 +3,7 @@
 ;; qresults-list.rkt -- a sophisticated list box control, see qresults-list%
 ;;
 ;; This file is part of qresults-list -- enhanced list-box% control
-;; Copyright (c) 2019 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019, 2020 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU Lesser General Public License as published by
@@ -229,9 +229,18 @@
     (init-field pref-tag)
     (init parent
           [label ""]
+          ;; Type of selection allowed for the underlying list-box% object and
+          ;; can be one of 'single 'multiple or 'extended. For the meaning of
+          ;; each value, see the documentation for the list-box% style
+          ;; initialization field.
+          [selection-type 'single]
           ;; A popup-menu% to be popped up when the user right-clicks on a
           ;; row.
           [right-click-menu #f])
+
+    ;; TODO: export this class with a proper contract attached.
+    (unless (member selection-type '(single multiple extended))
+      (error (format "bad qresults-list% selection-type: ~a" selection-type)))
 
     (super-new)
 
@@ -370,12 +379,12 @@
        [parent the-pane]
        [choices '()]
        [callback lb-callback]
-       [style '(multiple
-                single
-                variable-columns
-                clickable-headers
-                column-headers
-                reorderable-headers)]
+       [style (cons
+               selection-type
+               '(variable-columns
+                 clickable-headers
+                 column-headers
+                 reorderable-headers))]
        [columns '("")]))
 
     ;; Set a default file name to be used by `on-interactive-export-data` --
@@ -497,6 +506,13 @@
     (define/public (get-selected-row-index)
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f (car selected-items))))
+
+    ;; Return a list containing the indexes of the selected rows.  An empty
+    ;; list is returned if no items are selected.  If selection-type is
+    ;; 'single, the returned list will contain at most one item, otherwise
+    ;; multiple items can be returned.
+    (define/public (get-selected-row-indexes)
+      (send the-list-box get-selections))
 
     ;; Return the data corresponding to ROW-INDEX.  This is equivalent to
     ;; (list-ref the-data (get-selected-row-index)), but possibly more
