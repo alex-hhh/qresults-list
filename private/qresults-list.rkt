@@ -320,7 +320,15 @@
                          (if sort-descending? string>? string<?))
                         (#t
                          (if sort-descending? > <)))))
-        (set! the-data (sort the-data cmp #:key key)))
+        (set! the-data
+              (sort the-data
+                    ;; Make sure our comparison function can handle #f, which
+                    ;; we use to mark non-existent data.
+                    (lambda (a b)
+                      (cond ((not b) #t)
+                            ((not a) #f)
+                            (#t (cmp a b))))
+                    #:key key)))
 
       ;; Update the list-box in place (no rows are added/deleted)
       (refresh-contents)
