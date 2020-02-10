@@ -569,6 +569,10 @@
     (define/public (get-row-count)
       (send the-list-box get-number))
 
+    ;; Return the numer of rows in the list box that are selected.
+    (define/public (get-selected-row-count)
+      (length (send the-list-box get-selections)))
+
     ;; Clear the contents of the listbox.
     (define/public (clear)
       (send the-list-box clear)
