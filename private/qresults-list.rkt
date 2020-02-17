@@ -387,16 +387,12 @@
        [parent the-pane]
        [choices '()]
        [callback lb-callback]
-<<<<<<< HEAD
-       [style style-list]
-=======
        [style (cons
                selection-type
                '(variable-columns
                  clickable-headers
                  column-headers
                  reorderable-headers))]
->>>>>>> b680a09a8e83cc72fb306e3d9a8ebaff91a7040d
        [columns '("")]))
 
     ;; Set a default file name to be used by `on-interactive-export-data` --
@@ -553,6 +549,7 @@
 
     ;; Add a new row to the end of the list.
     (define/public (add-row data)
+
       (send the-list-box append "")
       (set! the-data (append the-data (list data)))
       (let ((row-index (- (send the-list-box get-number) 1)))
