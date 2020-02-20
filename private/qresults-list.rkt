@@ -3,7 +3,7 @@
 ;; qresults-list.rkt -- a sophisticated list box control, see qresults-list%
 ;;
 ;; This file is part of qresults-list -- enhanced list-box% control
-;; Copyright (c) 2019, 2020 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU Lesser General Public License as published by
@@ -191,7 +191,7 @@
              (send control get-label))))
     ))
 
-
+
 ;;....................................................... qresults-list% ....
 
 ;; Holds information about a column of data in a qresults-list% 
@@ -229,18 +229,14 @@
     (init-field pref-tag)
     (init parent
           [label ""]
-          ;; Type of selection allowed for the underlying list-box% object and
-          ;; can be one of 'single 'multiple or 'extended. For the meaning of
-          ;; each value, see the documentation for the list-box% style
-          ;; initialization field.
-          [selection-type 'single]
+          [style-list '(single
+                variable-columns
+                clickable-headers
+                column-headers
+                reorderable-headers)]
           ;; A popup-menu% to be popped up when the user right-clicks on a
           ;; row.
           [right-click-menu #f])
-
-    ;; TODO: export this class with a proper contract attached.
-    (unless (member selection-type '(single multiple extended))
-      (error (format "bad qresults-list% selection-type: ~a" selection-type)))
 
     (super-new)
 
@@ -320,15 +316,7 @@
                          (if sort-descending? string>? string<?))
                         (#t
                          (if sort-descending? > <)))))
-        (set! the-data
-              (sort the-data
-                    ;; Make sure our comparison function can handle #f, which
-                    ;; we use to mark non-existent data.
-                    (lambda (a b)
-                      (cond ((not b) #t)
-                            ((not a) #f)
-                            (#t (cmp a b))))
-                    #:key key)))
+        (set! the-data (sort the-data cmp #:key key)))
 
       ;; Update the list-box in place (no rows are added/deleted)
       (refresh-contents)
@@ -387,12 +375,7 @@
        [parent the-pane]
        [choices '()]
        [callback lb-callback]
-       [style (cons
-               selection-type
-               '(variable-columns
-                 clickable-headers
-                 column-headers
-                 reorderable-headers))]
+       [style style-list]
        [columns '("")]))
 
     ;; Set a default file name to be used by `on-interactive-export-data` --
@@ -515,14 +498,13 @@
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f (car selected-items))))
 
-
     ;; Return the indexs of selected rows, or #f is no row is
     ;; selected.
     (define/public (get-selected-row-indexes)
       ;(displayln "in get-selected-row-indexes")
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f selected-items)))
-
+    
     ;; Return the data corresponding to ROW-INDEX.  This is equivalent to
     ;; (list-ref the-data (get-selected-row-index)), but possibly more
     ;; efficient.
@@ -549,7 +531,6 @@
 
     ;; Add a new row to the end of the list.
     (define/public (add-row data)
-
       (send the-list-box append "")
       (set! the-data (append the-data (list data)))
       (let ((row-index (- (send the-list-box get-number) 1)))
@@ -558,7 +539,7 @@
         (send the-list-box set-first-visible-item row-index)))
 
 ;This function is from StackOverflow
-;https://stackoverflow.com/questions/16630702/what-racket-function-can-i-use-to-insert-a-value-into-an-arbitrary-position-with 
+;https://stackoverflow.com/questions/16630702/what-racket-function-can-i-use-to-insert-a-value-into-an-arbitrary-position-with
 (define (insert-at lst pos x)
   (define-values (before after) (split-at lst pos))
   (append before (cons x after)))
