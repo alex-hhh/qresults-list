@@ -229,14 +229,18 @@
     (init-field pref-tag)
     (init parent
           [label ""]
-          [style-list '(single
-                variable-columns
-                clickable-headers
-                column-headers
-                reorderable-headers)]
+          ;; Type of selection allowed for the underlying list-box% object and
+          ;; can be one of 'single 'multiple or 'extended. For the meaning of
+          ;; each value, see the documentation for the list-box% style
+          ;; initialization field.
+          [selection-type 'single]
           ;; A popup-menu% to be popped up when the user right-clicks on a
           ;; row.
           [right-click-menu #f])
+
+        ;; TODO: export this class with a proper contract attached.
+    (unless (member selection-type '(single multiple extended))
+      (error (format "bad qresults-list% selection-type: ~a" selection-type)))
 
     (super-new)
 
@@ -272,7 +276,7 @@
                  (data (in-list the-data)))
              (lb-fill-row the-list-box row-num formatters data))))))
 
-    (define (refresh-contents-1 row-num data) ;Looks like the point of this is to refresh only one row rather than the whole table as refresh-contents does.
+    (define (refresh-contents-1 row-num data)
       (let ((formatters (get-column-formatters)))
         (lb-fill-row the-list-box row-num formatters data)))
 
@@ -375,7 +379,12 @@
        [parent the-pane]
        [choices '()]
        [callback lb-callback]
-       [style style-list]
+       [style (cons
+               selection-type
+               '(variable-columns
+                 clickable-headers
+                 column-headers
+                 reorderable-headers))]
        [columns '("")]))
 
     ;; Set a default file name to be used by `on-interactive-export-data` --
@@ -547,15 +556,23 @@
 
     ;;Add a new row at a given row index
     (define/public (add-row-at new-data row-index)
-      ;Build a new set of rows
-      ;(displayln the-data)
-      (set! the-data
+        (set! the-data
             (insert-at the-data row-index new-data)
             )
-      ;(displayln the-data)
       (refresh-contents)
+      (send the-list-box set-selection row-index)
+      (send the-list-box set-first-visible-item row-index)
       )
 
+(define/public (add-rows-at new-data
+                            #:row-index [row-index  (- (send the-list-box get-number) 1)])
+  ;Default insertion point is the end of the table.
+
+  (for ([row new-data]) (set! the-data  (insert-at the-data row-index row)))
+  (refresh-contents)
+  (send the-list-box set-selection row-index)
+  (send the-list-box set-first-visible-item row-index)
+  )
 
     ;; Delete the row at ROW-INDEX.
     (define/public (delete-row row-index)
