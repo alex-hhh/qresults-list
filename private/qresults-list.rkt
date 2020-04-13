@@ -3,7 +3,7 @@
 ;; qresults-list.rkt -- a sophisticated list box control, see qresults-list%
 ;;
 ;; This file is part of qresults-list -- enhanced list-box% control
-;; Copyright (c) 2019, 2020 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@
 
 (require racket/gui/base racket/class racket/math file/md5
          racket/list racket/match
+         handy/list-utils
          "utilities.rkt"
          "widget-utilities.rkt"
          "edit-dialog-base.rkt"
@@ -238,7 +239,7 @@
           ;; row.
           [right-click-menu #f])
 
-    ;; TODO: export this class with a proper contract attached.
+        ;; TODO: export this class with a proper contract attached.
     (unless (member selection-type '(single multiple extended))
       (error (format "bad qresults-list% selection-type: ~a" selection-type)))
 
@@ -320,15 +321,7 @@
                          (if sort-descending? string>? string<?))
                         (#t
                          (if sort-descending? > <)))))
-        (set! the-data
-              (sort the-data
-                    ;; Make sure our comparison function can handle #f, which
-                    ;; we use to mark non-existent data.
-                    (lambda (a b)
-                      (cond ((not b) #t)
-                            ((not a) #f)
-                            (#t (cmp a b))))
-                    #:key key)))
+        (set! the-data (sort the-data cmp #:key key)))
 
       ;; Update the list-box in place (no rows are added/deleted)
       (refresh-contents)
@@ -515,12 +508,12 @@
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f (car selected-items))))
 
-    ;; Return a list containing the indexes of the selected rows.  An empty
-    ;; list is returned if no items are selected.  If selection-type is
-    ;; 'single, the returned list will contain at most one item, otherwise
-    ;; multiple items can be returned.
+    ;; Return the indexs of selected rows, or #f is no row is
+    ;; selected.
     (define/public (get-selected-row-indexes)
-      (send the-list-box get-selections))
+      ;(displayln "in get-selected-row-indexes")
+      (let ((selected-items (send the-list-box get-selections)))
+        (if (null? selected-items) #f selected-items)))
 
     ;; Return the data corresponding to ROW-INDEX.  This is equivalent to
     ;; (list-ref the-data (get-selected-row-index)), but possibly more
@@ -555,6 +548,14 @@
         (send the-list-box set-selection row-index)
         (send the-list-box set-first-visible-item row-index)))
 
+
+    (define/public (add-rows-at new-data #:row-index [row-index  (- (send the-list-box get-number) 1)])
+      (for ([row new-data])
+        (set! the-data  (insert-at the-data (list  row) row-index)))
+      (refresh-contents)
+      (send the-list-box set-selection row-index)
+      (send the-list-box set-first-visible-item row-index))
+
     ;; Delete the row at ROW-INDEX.
     (define/public (delete-row row-index)
       (set! the-data
@@ -566,6 +567,10 @@
     ;; Return the number of rows in the list box.
     (define/public (get-row-count)
       (send the-list-box get-number))
+
+    ;; Return the numer of rows in the list box that are selected.
+    (define/public (get-selected-row-count)
+      (length (send the-list-box get-selections)))
 
     ;; Clear the contents of the listbox.
     (define/public (clear)
@@ -580,7 +585,4 @@
     ;; Can be overriden if the user wants to be notified when an item is
     ;; selected
     (define/public (on-select row-index row-data)
-      #f)
-
-    ))
-
+      #f)))
