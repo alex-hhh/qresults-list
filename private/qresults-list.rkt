@@ -191,7 +191,7 @@
              (send control get-label))))
     ))
 
-
+
 ;;....................................................... qresults-list% ....
 
 ;; Holds information about a column of data in a qresults-list% 
@@ -276,7 +276,7 @@
                  (data (in-list the-data)))
              (lb-fill-row the-list-box row-num formatters data))))))
 
-    (define (refresh-contents-1 row-num data)
+    (define (refresh-contents-1 row-num data) ;Looks like the point of this is to refresh only one row rather than the whole table as refresh-contents does.
       (let ((formatters (get-column-formatters)))
         (lb-fill-row the-list-box row-num formatters data)))
 
@@ -515,12 +515,13 @@
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f (car selected-items))))
 
-    ;; Return a list containing the indexes of the selected rows.  An empty
-    ;; list is returned if no items are selected.  If selection-type is
-    ;; 'single, the returned list will contain at most one item, otherwise
-    ;; multiple items can be returned.
+
+    ;; Return the indexs of selected rows, or #f is no row is
+    ;; selected.
     (define/public (get-selected-row-indexes)
-      (send the-list-box get-selections))
+      ;(displayln "in get-selected-row-indexes")
+      (let ((selected-items (send the-list-box get-selections)))
+        (if (null? selected-items) #f selected-items)))
 
     ;; Return the data corresponding to ROW-INDEX.  This is equivalent to
     ;; (list-ref the-data (get-selected-row-index)), but possibly more
@@ -548,12 +549,32 @@
 
     ;; Add a new row to the end of the list.
     (define/public (add-row data)
+
       (send the-list-box append "")
       (set! the-data (append the-data (list data)))
       (let ((row-index (- (send the-list-box get-number) 1)))
         (refresh-contents-1 row-index data)
         (send the-list-box set-selection row-index)
         (send the-list-box set-first-visible-item row-index)))
+
+;This function is from StackOverflow
+;https://stackoverflow.com/questions/16630702/what-racket-function-can-i-use-to-insert-a-value-into-an-arbitrary-position-with 
+(define (insert-at lst pos x)
+  (define-values (before after) (split-at lst pos))
+  (append before (cons x after)))
+
+
+    ;;Add a new row at a given row index
+    (define/public (add-row-at new-data row-index)
+      ;Build a new set of rows
+      ;(displayln the-data)
+      (set! the-data
+            (insert-at the-data row-index new-data)
+            )
+      ;(displayln the-data)
+      (refresh-contents)
+      )
+
 
     ;; Delete the row at ROW-INDEX.
     (define/public (delete-row row-index)
@@ -566,6 +587,10 @@
     ;; Return the number of rows in the list box.
     (define/public (get-row-count)
       (send the-list-box get-number))
+
+    ;; Return the numer of rows in the list box that are selected.
+    (define/public (get-selected-row-count)
+      (length (send the-list-box get-selections)))
 
     ;; Clear the contents of the listbox.
     (define/public (clear)
@@ -580,7 +605,5 @@
     ;; Can be overriden if the user wants to be notified when an item is
     ;; selected
     (define/public (on-select row-index row-data)
-      #f)
-
-    ))
+      #f)))
 
