@@ -20,6 +20,7 @@
 
 (require racket/gui/base racket/class racket/math file/md5
          racket/list racket/match
+         handy/list-utils
          "utilities.rkt"
          "widget-utilities.rkt"
          "edit-dialog-base.rkt"
@@ -513,7 +514,7 @@
       ;(displayln "in get-selected-row-indexes")
       (let ((selected-items (send the-list-box get-selections)))
         (if (null? selected-items) #f selected-items)))
-    
+
     ;; Return the data corresponding to ROW-INDEX.  This is equivalent to
     ;; (list-ref the-data (get-selected-row-index)), but possibly more
     ;; efficient.
@@ -547,32 +548,13 @@
         (send the-list-box set-selection row-index)
         (send the-list-box set-first-visible-item row-index)))
 
-;This function is from StackOverflow
-;https://stackoverflow.com/questions/16630702/what-racket-function-can-i-use-to-insert-a-value-into-an-arbitrary-position-with
-(define (insert-at lst pos x)
-  (define-values (before after) (split-at lst pos))
-  (append before (cons x after)))
 
-
-    ;;Add a new row at a given row index
-    (define/public (add-row-at new-data row-index)
-        (set! the-data
-            (insert-at the-data row-index new-data)
-            )
+    (define/public (add-rows-at new-data #:row-index [row-index  (- (send the-list-box get-number) 1)])
+      (for ([row new-data])
+        (set! the-data  (insert-at the-data (list  row) row-index)))
       (refresh-contents)
       (send the-list-box set-selection row-index)
-      (send the-list-box set-first-visible-item row-index)
-      )
-
-(define/public (add-rows-at new-data
-                            #:row-index [row-index  (- (send the-list-box get-number) 1)])
-  ;Default insertion point is the end of the table.
-
-  (for ([row new-data]) (set! the-data  (insert-at the-data row-index row)))
-  (refresh-contents)
-  (send the-list-box set-selection row-index)
-  (send the-list-box set-first-visible-item row-index)
-  )
+      (send the-list-box set-first-visible-item row-index))
 
     ;; Delete the row at ROW-INDEX.
     (define/public (delete-row row-index)
@@ -604,4 +586,3 @@
     ;; selected
     (define/public (on-select row-index row-data)
       #f)))
-
